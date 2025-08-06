@@ -1,4 +1,4 @@
-const { scrollWaitAndHighlight } = require('./scrollWaitAndHighlight');
+// const { scrollWaitAndHighlight } = require('./scrollWaitAndHighlight');
 
 export async function click(page, labelText) {
   console.log(`🔍 Trying to click element with label "${labelText}"`);
