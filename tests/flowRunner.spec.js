@@ -115,6 +115,11 @@ export async function executeTestFlow({ page }, testInfo) {
   const screenshotsDir = path.join(testInfo.outputDir, 'screenshots');
   await fs.mkdir(screenshotsDir, { recursive: true });
 
+  // Log video path if you want to track it
+  if (testInfo.videoPath) {
+    console.log(`Video will be saved to: ${testInfo.videoPath}`);
+  }
+
   for (let i = 0; i < flow.length; i++) {
     const step = flow[i];
     const stepName = `step-${i + 1}-${step.intent}`.replace(/[^a-z0-9\-]/gi, '_');
@@ -143,7 +148,7 @@ export async function executeTestFlow({ page }, testInfo) {
           throw new Error(`Unknown intent: ${step.intent}`);
       }
 
-      await page.waitForTimeout(1000); // Short pause between steps
+      await page.waitForTimeout(1000);
       await page.screenshot({ 
         path: path.join(screenshotsDir, `${stepName}.png`),
         fullPage: true
@@ -158,4 +163,3 @@ export async function executeTestFlow({ page }, testInfo) {
     }
   }
 }
-////////////////////////////////////////////////////////////2nd change
