@@ -1,81 +1,161 @@
+// // // import { expect } from 'playwright/test';
+// // // import { promises as fs } from 'fs';
+// // // import path from 'path';
+// // // import { fillInput } from '../utils/fillInput.js';
+
+// // // export async function executeTestFlow({ page }, testInfo) {
+// // //   const flow = testInfo.payload;
+// // //   const screenshotsDir = path.join(testInfo.outputDir, 'screenshots');
+// // //   await fs.mkdir(screenshotsDir, { recursive: true });
+
+// // //   for (let i = 0; i < flow.length; i++) {
+// // //     const step = flow[i];
+// // //     const stepName = `step-${i + 1}-${step.intent}`.replace(/[^a-z0-9\-]/gi, '_');
+
+// // //     console.log(`Executing: ${stepName}`);
+
+// // //     try {
+// // //       switch (step.intent.toLowerCase()) {
+// // //         case 'navigate':
+// // //           await page.goto(step.url, {
+// // //             waitUntil: 'networkidle',
+// // //             timeout: 30000
+// // //           });
+// // //           await page.waitForLoadState('domcontentloaded');
+// // //           break;
+
+// // //         case 'input':
+// // //           await fillInput(page, step.label, step.value);
+// // //           break;
+
+// // //         default:
+// // //           throw new Error(`Unknown intent: ${step.intent}`);
+// // //       }
+
+// // //       await page.screenshot({ 
+// // //         path: path.join(screenshotsDir, `${stepName}.png`),
+// // //         fullPage: true
+// // //       });
+// // //     } catch (err) {
+// // //       console.error(`Error in step ${i + 1}: ${err.message}`);
+// // //       await page.screenshot({ 
+// // //         path: path.join(screenshotsDir, `${stepName}-error.png`),
+// // //         fullPage: true
+// // //       });
+// // //       throw err;
+// // //     }
+// // //   }
+// // // }
+// // //////////////////////////////////////////////////////////////////////////////////////////
+
+// // import { expect } from 'playwright/test';
+// // import { promises as fs } from 'fs';
+// // import path from 'path';
+// // import { fillInput } from '../utils/fillInput.js';
+// // import { click } from '../utils/click.js';
+
+// // export async function executeTestFlow({ page }, testInfo) {
+// //   const flow = testInfo.payload;
+// //   const screenshotsDir = path.join(testInfo.outputDir, 'screenshots');
+// //   await fs.mkdir(screenshotsDir, { recursive: true });
+
+// //   for (let i = 0; i < flow.length; i++) {
+// //     const step = flow[i];
+// //     const stepName = `step-${i + 1}-${step.intent}`.replace(/[^a-z0-9\-]/gi, '_');
+
+// //     console.log(`Executing: ${stepName}`);
+
+// //     try {
+// //       switch (step.intent.toLowerCase()) {
+// //         case 'navigate':
+// //           await page.goto(step.url, {
+// //             waitUntil: 'networkidle',
+// //             timeout: 30000
+// //           });
+// //           break;
+
+// //         case 'input':
+// //           await fillInput(page, step.label, step.value);
+// //           break;
+
+// //         case 'click':
+// //           await click(page, step.text);
+// //           break;
+
+// //         default:
+// //           throw new Error(`Unknown intent: ${step.intent}`);
+// //       }
+
+// //       await page.waitForTimeout(1000); // Short pause between steps
+// //       await page.screenshot({ 
+// //         path: path.join(screenshotsDir, `${stepName}.png`),
+// //         fullPage: true
+// //       });
+// //     } catch (err) {
+// //       console.error(`Error in step ${i + 1}: ${err.message}`);
+// //       await page.screenshot({ 
+// //         path: path.join(screenshotsDir, `${stepName}-error.png`),
+// //         fullPage: true
+// //       });
+// //       throw err;
+// //     }
+// //   }
+// // }  2nd stp
 
 
-// import { test, expect } from '@playwright/test';
-// import fs from 'fs';
-// import path from 'path';
-
-// test('🔁 Execute flow steps from flow.json', async ({ page }, testInfo) => {
-//   const raw = process.env.FLOW_JSON_FROM_REQUEST;
-//   if (!raw) throw new Error('No script passed in env');
-
-//   const flow = JSON.parse(raw);
-//   const screenshotsDir = path.join(testInfo.outputDir, 'step-screens');
-
-//   fs.mkdirSync(screenshotsDir, { recursive: true });
-
-//   for (let i = 0; i < flow.length; i++) {
-//     const step = flow[i];
-//     const stepName = `step-${i + 1}-${step.type}${step.text ? '-' + step.text : ''}`.replace(/[^a-z0-9\-]/gi, '_');
-//     console.log(`🔹 Executing: ${stepName}`);
-
-//     switch (step.type) {
-//       case 'goto':
-//         await page.goto(step.url);
-//         await page.screenshot({ path: path.join(screenshotsDir, `${stepName}.png`) });
-//         break;
-
-//       case 'click': {
-//         const locator = page.getByText(step.text, { exact: true });
-
-//         // Highlight the element (temporary outline via JS)
-//         await locator.evaluate(el => {
-//           el.style.outline = '3px solid red';
-//         });
-
-//         await locator.scrollIntoViewIfNeeded();
-//         await page.waitForTimeout(200); // just to let highlight be visible in screenshot
-//         await page.screenshot({ path: path.join(screenshotsDir, `${stepName}.png`) });
-
-//         await locator.click();
-//         break;
-//       }
-
-//       // Add more step types if needed
-
-//       default:
-//         throw new Error(`Unknown step type: ${step.type}`);
-//     }
-//   }
-// });
-import { test } from '@playwright/test';
-import fs from 'fs';
+import { expect } from 'playwright/test';
+import { promises as fs } from 'fs';
 import path from 'path';
-import { intentMapper } from '../utils/intentMapper';
+import { fillInput } from '../utils/fillInput.js';
+import { click } from '../utils/click.js';
+import { selectDropdown } from '../utils/dropdown.js';
 
-test('🔁 Execute flow steps from flow.json', async ({ page }, testInfo) => {
-  const raw = process.env.FLOW_JSON_FROM_REQUEST;
-  if (!raw) throw new Error('No script passed in env');
-
-  const flow = JSON.parse(raw);
-  const screenshotsDir = path.join(testInfo.outputDir, 'step-screens');
-  fs.mkdirSync(screenshotsDir, { recursive: true });
+export async function executeTestFlow({ page }, testInfo) {
+  const flow = testInfo.payload;
+  const screenshotsDir = path.join(testInfo.outputDir, 'screenshots');
+  await fs.mkdir(screenshotsDir, { recursive: true });
 
   for (let i = 0; i < flow.length; i++) {
     const step = flow[i];
-    const stepName = `step-${i + 1}-${step.type}${step.text ? '-' + step.text : ''}`.replace(/[^a-z0-9\-]/gi, '_');
-    console.log(`🔹 Executing: ${stepName}`);
+    const stepName = `step-${i + 1}-${step.intent}`.replace(/[^a-z0-9\-]/gi, '_');
 
-    if (step.type === 'goto') {
-      await page.goto(step.url);
-      await page.screenshot({ path: path.join(screenshotsDir, `${stepName}.png`) });
-      continue;
+    console.log(`Executing: ${stepName}`);
+
+    try {
+      switch (step.intent.toLowerCase()) {
+        case 'navigate':
+          await page.goto(step.url, { waitUntil: 'networkidle', timeout: 30000 });
+          break;
+
+        case 'input':
+          await fillInput(page, step.label, step.value);
+          break;
+
+        case 'click':
+          await click(page, step.text);
+          break;
+
+        case 'select':
+          await selectDropdown(page, step.label, step.value);
+          break;
+
+        default:
+          throw new Error(`Unknown intent: ${step.intent}`);
+      }
+
+      await page.waitForTimeout(1000); // Short pause between steps
+      await page.screenshot({ 
+        path: path.join(screenshotsDir, `${stepName}.png`),
+        fullPage: true
+      });
+    } catch (err) {
+      console.error(`Error in step ${i + 1}: ${err.message}`);
+      await page.screenshot({ 
+        path: path.join(screenshotsDir, `${stepName}-error.png`),
+        fullPage: true
+      });
+      throw err;
     }
-
-    const intentFn = intentMapper[step.type];
-    if (!intentFn) {
-      throw new Error(`Unknown step type: ${step.type}`);
-    }
-
-    await intentFn(page, step, screenshotsDir, stepName);
   }
-});
+}
+////////////////////////////////////////////////////////////2nd change

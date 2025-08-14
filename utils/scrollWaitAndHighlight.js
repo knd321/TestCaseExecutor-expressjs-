@@ -1,22 +1,16 @@
-// utils/scrollWaitAndHighlight.js
+export async function scrollWaitAndHighlight(page, locator) {
+  await locator.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
 
-async function scrollWaitAndHighlight(locator) {
   try {
-    await locator.waitFor({ state: 'visible', timeout: 10000 });
-    const handle = await locator.elementHandle();
-    if (handle) {
-      try {
-        await handle.scrollIntoViewIfNeeded();
-      } catch (scrollErr) {
-        console.warn("⚠️ scrollIntoViewIfNeeded failed: " + scrollErr.message);
-      }
-      await locator.evaluate(el => el.style.border = '2px solid red');
-    } else {
-      console.warn('⚠️ elementHandle() returned null, skipping scroll/highlight');
-    }
-  } catch (waitErr) {
-    console.warn("⚠️ Locator not visible: " + waitErr.message);
+    await locator.evaluate((el) => {
+      const originalOutline = el.style.outline;
+      el.style.outline = '2px solid red';
+      setTimeout(() => {
+        el.style.outline = originalOutline;
+      }, 1000);
+    });
+  } catch (err) {
+    console.warn(`⚠️ Could not highlight element: ${err.message}`);
   }
 }
-
-module.exports = { scrollWaitAndHighlight };

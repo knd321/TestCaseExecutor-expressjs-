@@ -1,29 +1,108 @@
-const http = require('http');
-const express = require('express')
+// import express from 'express';
+// import { chromium } from 'playwright';
+// import { executeTestFlow } from './tests/flowRunner.spec.js';
+
+// const app = express();
+// const port = 8002;
+
+// app.use(express.json());
+
+// app.post('/exec/execScript', async (req, res) => {
+//   if (!req.body || !Array.isArray(req.body)) {
+//     return res.status(400).json({ error: 'Request body must be an array of test steps' });
+//   }
+
+//   const browser = await chromium.launch({ 
+//     headless: false,
+//     timeout: 60000
+//   });
+//   const context = await browser.newContext({
+//     viewport: { width: 1280, height: 720 },
+//     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+//   });
+//   const page = await context.newPage();
+
+//   try {
+//     const testInfo = {
+//       outputDir: './test-results',
+//       payload: req.body
+//     };
+
+//     await executeTestFlow({ page }, testInfo);
+    
+//     res.json({ 
+//       status: 'success',
+//       message: 'Test executed successfully',
+//       screenshots: `${process.cwd()}/test-results/screenshots`
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       status: 'error',
+//       message: error.message,
+//       suggestion: 'Check if the page structure changed or try different selectors',
+//       debug: {
+//         url: page.url(),
+//         screenshot: `${process.cwd()}/test-results/screenshots/last-error.png`
+//       }
+//     });
+//   } finally {
+//     await browser.close();
+//   }
+// });
+
+// app.listen(port, () => {
+//   console.log(`Server started on port ${port}`);
+// });
+///////////////////////////////////////////////////////////////
+
+import express from 'express';
+import { chromium } from 'playwright';
+import { executeTestFlow } from './tests/flowRunner.spec.js';
+
 const app = express();
-const cors = require('cors');
+const port = 8002;
 
-// const server = http.createServer((req, res) => {
-//     res.writeHead(200, { 'Content-Type': 'text/html' });
-//     res.end('<html>Hello World!</html>');
-// });
+app.use(express.json());
 
-// server.listen(8080, () => {
-//     console.log('Server running at http://localhost:8080/');
-// });
+app.post('/exec/execScript', async (req, res) => {
+  if (!req.body || !Array.isArray(req.body)) {
+    return res.status(400).json({ error: 'Request body must be an array of test steps' });
+  }
 
-const router = require('./routes/routes')
-const PORT = 8002
-app.use(express.urlencoded({ extended: true }));
-app.use(cors({
-  origin: '*', // OR use a function if you want to allow credentials
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', '*'],
-  exposedHeaders: ['Content-Type', 'Authorization'],
-}));
+  const browser = await chromium.launch({ 
+    headless: false,
+    timeout: 60000
+  });
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 720 }
+  });
+  const page = await context.newPage();
 
-app.use(express.json())
-app.use('/',router)
-app.listen(PORT,()=>{
-    console.log('server started in 8002')
-})
+  try {
+    const testInfo = {
+      outputDir: './test-results',
+      payload: req.body
+    };
+
+    await executeTestFlow({ page }, testInfo);
+    
+    res.json({ 
+      status: 'success',
+      message: 'Test executed successfully',
+      screenshots: `${process.cwd()}/test-results/screenshots`
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      suggestion: 'Check if the page structure changed or try different selectors'
+    });
+  } finally {
+    await browser.close();
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
+});
+////////////////////////////2nd 

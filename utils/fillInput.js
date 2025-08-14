@@ -1,53 +1,41 @@
-//   const path = require('path');
-// export const fillInput = async (page, label, value) => {
-//   const variants = [
-//     () => page.getByLabel(label),
-//     () => page.getByRole('textbox', { name: label }),
-//     async () => (await page.getByText(label)).locator('input, textarea')
-//   ];
-
-export const fillInput = async (page, label, value) => {
-  const variants = [
-    () => page.getByLabel(label),
-    () => page.getByRole('textbox', { name: label }),
-    () => page.getByPlaceholder(label),
-    async () => {
-      const textLocator = await page.getByText(label);
-      return textLocator.locator('input, textarea');
-    }
-  ];
-
-  for (const [i, variant] of variants.entries()) {
-    try {
-      console.log(`🔍 Trying variant ${i + 1} for label '${label}'`);
-      const locator = await variant();
-
-      // Check if locator is valid and has a fill function
-      if (!locator || typeof locator.fill !== 'function') {
-        throw new Error("Invalid locator object returned");
-      }
-
-      // Optional: highlight or scroll into view
-      // await scrollWaitAndHighlight(locator);
-
-      await locator.fill(value);
-      console.log(`✅ Filled '${label}' using variant ${i + 1}`);
-      // await takeShotFactory(`after_fill_${label.replace(/\s+/g, '_')}`);
-      return; // Success, exit early
-    } catch (e) {
-      console.log(`⚠️ Variant ${i + 1} failed for label '${label}': ${e.message}`);
-    }
-  }
-
-  // If all variants fail
-  console.warn(`❌ Could not fill '${label}' with any variant`);
-
+export async function fillInput(page, label, value) {
+  console.log(`Filling ${label} with ${value}`);
+  
   try {
-    const content = await page.content();
-    console.log(`🧾 Page content snapshot:\n${content}`);
-  } catch (e) {
-    console.log('⚠️ Could not get page content:', e.message);
-  }
+    // Try multiple selector strategies for input fields
+    const inputSelectors = [
+      `input[name="${label}"], input[id="${label}"]`,
+      `input[name*="${label.toLowerCase()}" i], input[id*="${label.toLowerCase()}" i]`,
+      `input[placeholder*="${label}"], textarea[placeholder*="${label}"]`,
+      `input[type="text"], input[type="email"]`,
+      'input:not([type="hidden"])'
+    ];
 
-  await takeShotFactory(`after_fill_failed_${label.replace(/\s+/g, '_')}`);
-};
+    for (const selector of inputSelectors) {
+      try {
+        const input = page.locator(selector).first();
+        await input.waitFor({ state: 'visible', timeout: 5000 });
+        await input.fill(value);
+        console.log(`✅ Successfully filled using selector: ${selector}`);
+        return;
+      } catch (err) {
+        console.log(`⚠️ Input selector failed: ${selector}`);
+      }
+    }
+
+    // Special handling for password fields
+    if (label.toLowerCase().includes('password')) {
+      const passwordField = await page.locator('input[type="password"]').first();
+      await passwordField.waitFor({ state: 'visible', timeout: 5000 });
+      await passwordField.fill(value);
+      console.log(`✅ Successfully filled password field`);
+      return;
+    }
+
+    throw new Error(`Could not find ${label} field with any selector strategy`);
+  } catch (error) {
+    console.error(`❌ Failed to fill ${label}: ${error.message}`);
+    throw error;
+  }
+}
+////////////////////////////////////////////////////
